@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Market Analysis</title>
+    <style>
+        .result-section {
+            margin-bottom: 30px;
+        }
+        .bar-graph {
+            margin-top: 10px;
+        }
+        img {
+            max-width: 600px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="text-center my-4">
+        <a href="{% url 'portfolio_weights' %}" class="btn btn-success">View Portfolio Weights Graphs</a>
+    </div>
+
+    <h1>Stock Market Simulation & Analysis</h1>
+    <form method="post">
+        {% csrf_token %}
+        <!-- Your existing form fields -->
+        <input type="number" name="n_stocks" value="{{ default_n_stocks }}">
+        <input type="submit" value="Run Analysis">
+    </form>
+
+    {% if results %}
+        <h2>Results</h2>
+
+        <!-- Stock Correlation Graph -->
+        <div class="result-section">
+            <p><strong>Stock Correlation Graph:</strong></p>
+            <img src="{{ results.graph_url }}" alt="Stock Correlation Graph">
+        </div>
+
+        <!-- Portfolio Weights -->
+        <div class="result-section">
+            <p><strong>Portfolio Weights:</strong> {{ results.weights }}</p>
+        </div>
+
+        <!-- Expected Return -->
+        <div class="result-section">
+            <p><strong>Expected Return:</strong> {{ results.expected_return }}</p>
+            <!-- Bar Graph -->
+            <div class="bar-graph">
+                <canvas id="returnBar" width="600" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Portfolio Risk -->
+        <div class="result-section">
+            <p><strong>Portfolio Risk (Std Dev):</strong> {{ results.risk }}</p>
+            <!-- Bar Graph -->
+            <div class="bar-graph">
+                <canvas id="riskBar" width="600" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Black-Scholes sample -->
+        <div class="result-section">
+            <h3>Sample Stock Prices (Black-Scholes):</h3>
+            <p>{{ results.bs_sample }}</p>
+            <p>Mean: {{ results.bs_mean }}</p>
+            <p>Std Dev: {{ results.bs_std }}</p>
+        </div>
+
+        <!-- Jump-Diffusion sample -->
+        <div class="result-section">
+            <h3>Sample Jump-Diffusion Stock Prices:</h3>
+            <p>{{ results.jd_sample }}</p>
+            <p>Mean: {{ results.jd_mean }}</p>
+            <p>Std Dev: {{ results.jd_std }}</p>
+        </div>
+
+        <!-- GNN Prediction -->
+        <div class="result-section">
+            <h3>Predictions from Graphon Neural Network:</h3>
+            <p>{{ results.gnn_prediction }}</p>
+            <div>
+                <h4>GNN Prediction Interpretation:</h4>
+                <p>
+                    {% if results.gnn_prediction %}
+                        {% with preds=results.gnn_prediction|safe|json_loads %}
+                            {% for val in preds %}
+                                {% if val > 0.75 %}
+                                    <strong>High positive correlation</strong><br>
+                                {% elif val > 0.25 %}
+                                    <em>Moderate correlation</em><br>
+                                {% else %}
+                                    <span>Low correlation</span><br>
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        No GNN prediction available.
+                    {% endif %}
+                </p>
+            </div>
+            <!-- GNN Output Bar Chart -->
+            <canvas id="gnnBar" width="600" height="200"></canvas>
+        </div>
+
+        <!-- Backtest Results -->
+        <h3>Backtest Results</h3>
+        <ul>
+            <li>Final Value: {{ results.backtest_final_value }}</li>
+            <li>Sharpe Ratio: {{ results.backtest_sharpe }}</li>
+            <li>Max Drawdown: {{ results.backtest_drawdown }}</li>
+        </ul>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Function to create bar charts
+            function createBarChart(canvasId, data, labels, label) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Plot Expected Return
+            createBarChart('returnBar', [{{ results.expected_return }}], ['Expected Return'], 'Value');
+
+            // Plot Risk
+            createBarChart('riskBar', [{{ results.risk }}], ['Risk'], 'Value');
+
+            // Plot GNN predictions if available
+            {% if results.gnn_prediction %}
+                {% with preds=results.gnn_prediction|safe|json_loads %}
+                    createBarChart('gnnBar', {{ preds|safe }}, ['Output 1', 'Output 2', 'Output 3', 'Output 4'], 'GNN Outputs');
+                {% endwith %}
+            {% endif %}
+        </script>
+
+    {% endif %}
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Market Analysis</title>
+    <style>
+        .result-section {
+            margin-bottom: 30px;
+        }
+        .bar-graph {
+            margin-top: 10px;
+        }
+        img {
+            max-width: 600px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="text-center my-4">
+        <a href="{% url 'portfolio_weights' %}" class="btn btn-success">View Portfolio Weights Graphs</a>
+    </div>
+
+    <h1>Stock Market Simulation & Analysis</h1>
+    <form method="post">
+        {% csrf_token %}
+        <!-- Your existing form fields -->
+        <input type="number" name="n_stocks" value="{{ default_n_stocks }}">
+        <input type="submit" value="Run Analysis">
+    </form>
+
+    {% if results %}
+        <h2>Results</h2>
+
+        <!-- Stock Correlation Graph -->
+        <div class="result-section">
+            <p><strong>Stock Correlation Graph:</strong></p>
+            <img src="{{ results.graph_url }}" alt="Stock Correlation Graph">
+        </div>
+
+        <!-- Portfolio Weights -->
+        <div class="result-section">
+            <p><strong>Portfolio Weights:</strong> {{ results.weights }}</p>
+        </div>
+
+        <!-- Expected Return -->
+        <div class="result-section">
+            <p><strong>Expected Return:</strong> {{ results.expected_return }}</p>
+            <!-- Bar Graph -->
+            <div class="bar-graph">
+                <canvas id="returnBar" width="600" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Portfolio Risk -->
+        <div class="result-section">
+            <p><strong>Portfolio Risk (Std Dev):</strong> {{ results.risk }}</p>
+            <!-- Bar Graph -->
+            <div class="bar-graph">
+                <canvas id="riskBar" width="600" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Black-Scholes sample -->
+        <div class="result-section">
+            <h3>Sample Stock Prices (Black-Scholes):</h3>
+            <p>{{ results.bs_sample }}</p>
+            <p>Mean: {{ results.bs_mean }}</p>
+            <p>Std Dev: {{ results.bs_std }}</p>
+        </div>
+
+        <!-- Jump-Diffusion sample -->
+        <div class="result-section">
+            <h3>Sample Jump-Diffusion Stock Prices:</h3>
+            <p>{{ results.jd_sample }}</p>
+            <p>Mean: {{ results.jd_mean }}</p>
+            <p>Std Dev: {{ results.jd_std }}</p>
+        </div>
+
+        <!-- GNN Prediction -->
+        <div class="result-section">
+            <h3>Predictions from Graphon Neural Network:</h3>
+            <p>{{ results.gnn_prediction }}</p>
+            <div>
+                <h4>GNN Prediction Interpretation:</h4>
+                <p>
+                    {% if results.gnn_prediction %}
+                        {% with preds=results.gnn_prediction|safe|json_loads %}
+                            {% for val in preds %}
+                                {% if val > 0.75 %}
+                                    <strong>High positive correlation</strong><br>
+                                {% elif val > 0.25 %}
+                                    <em>Moderate correlation</em><br>
+                                {% else %}
+                                    <span>Low correlation</span><br>
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        No GNN prediction available.
+                    {% endif %}
+                </p>
+            </div>
+            <!-- GNN Output Bar Chart -->
+            <canvas id="gnnBar" width="600" height="200"></canvas>
+        </div>
+
+        <!-- Backtest Results -->
+        <h3>Backtest Results</h3>
+        <ul>
+            <li>Final Value: {{ results.backtest_final_value }}</li>
+            <li>Sharpe Ratio: {{ results.backtest_sharpe }}</li>
+            <li>Max Drawdown: {{ results.backtest_drawdown }}</li>
+        </ul>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Function to create bar charts
+            function createBarChart(canvasId, data, labels, label) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Plot Expected Return
+            createBarChart('returnBar', [{{ results.expected_return }}], ['Expected Return'], 'Value');
+
+            // Plot Risk
+            createBarChart('riskBar', [{{ results.risk }}], ['Risk'], 'Value');
+
+            // Plot GNN predictions if available
+            {% if results.gnn_prediction %}
+                {% with preds=results.gnn_prediction|safe|json_loads %}
+                    createBarChart('gnnBar', {{ preds|safe }}, ['Output 1', 'Output 2', 'Output 3', 'Output 4'], 'GNN Outputs');
+                {% endwith %}
+            {% endif %}
+        </script>
+
+    {% endif %}
+</body>
+</html>

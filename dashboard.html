@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quant Analytics Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+            background: #f7f7f7;
+        }
+        h2 { margin-top: 40px; }
+        img {
+            max-width: 100%;
+            border: 1px solid #ccc;
+            background: white;
+            padding: 10px;
+        }
+        table {
+            border-collapse: collapse;
+            background: white;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            text-align: right;
+        }
+        th { background: #eee; }
+        .box {
+            background: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>📈 Quant / Market Analytics</h1>
+
+<div class="box">
+    <form method="post">
+        {% csrf_token %}
+        <label>Number of stocks:</label>
+        <input type="number" name="n_stocks" value="10">
+
+        <label>Correlation threshold:</label>
+        <input type="text" name="corr_threshold" value="0.6">
+
+        <button type="submit">Run analysis</button>
+    </form>
+</div>
+
+{% if results %}
+
+<div class="box">
+    <h2>🕸 Correlation Network</h2>
+    <img src="{{ results.graph_url }}">
+</div>
+
+<div class="box">
+    <h2>📊 Graphon</h2>
+    <img src="{{ results.graphon_url }}">
+</div>
+
+<div class="box">
+    <h2>💼 Optimized Portfolio</h2>
+    <p><b>Expected return:</b> {{ results.expected_return }}</p>
+    <p><b>Risk:</b> {{ results.risk }}</p>
+
+    <table>
+        <tr>
+            <th>Asset</th>
+            <th>Weight</th>
+        </tr>
+        {% for w in results.weights %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ w }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<div class="box">
+    <h2>📉 Backtest</h2>
+    <p><b>Final value:</b> {{ results.backtest_final_value }}</p>
+    <p><b>Sharpe:</b> {{ results.backtest_sharpe }}</p>
+    <p><b>Max drawdown:</b> {{ results.backtest_drawdown }}</p>
+
+    <img src="data:image/png;base64,{{ results.backtest_equity_curve_img }}">
+</div>
+
+<div class="box">
+    <h2>📊 Alpha factor analysis</h2>
+    <p><b>IC mean:</b> {{ results.alpha_analysis.ic_mean }}</p>
+    <p><b>IC IR:</b> {{ results.alpha_analysis.ic_ir }}</p>
+    <p><b>Quantile returns:</b> {{ results.alpha_analysis.quantile_returns }}</p>
+</div>
+
+<div class="box">
+    <h2>🤖 ML Alpha</h2>
+    <p><b>IC mean:</b> {{ results.ml_alpha_analysis.ml_ic_mean }}</p>
+    <p><b>IC IR:</b> {{ results.ml_alpha_analysis.ml_ic_ir }}</p>
+    <p><b>Long–Short return:</b> {{ results.ml_alpha_analysis.ml_long_short_return }}</p>
+</div>
+
+<div class="box">
+    <h2>📋 Excel-style summary</h2>
+    <table>
+        <tr>
+            {% for key in results.excel_summary_table.0.keys %}
+                <th>{{ key }}</th>
+            {% endfor %}
+        </tr>
+        {% for row in results.excel_summary_table %}
+        <tr>
+            {% for value in row.values %}
+                <td>{{ value }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endif %}
+
+</body>
+</html>

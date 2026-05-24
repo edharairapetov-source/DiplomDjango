@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Quant Lab</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #020617;
+            padding: 20px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        header h1 {
+            margin: 0;
+            color: #38bdf8;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .card {
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            color: #7dd3fc;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            background: #020617;
+            color: #e5e7eb;
+            border: 1px solid #334155;
+            border-radius: 5px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #38bdf8;
+            color: #020617;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #0ea5e9;
+        }
+
+        .metrics {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .metric {
+            flex: 1;
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric span {
+            display: block;
+            font-size: 24px;
+            margin-top: 5px;
+            color: #38bdf8;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid #1e293b;
+            background: #fff;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Quant Lab 🔬📊</h1>
+    <p>Research & Portfolio Optimization Environment</p>
+</header>
+
+<div class="container">
+
+    <!-- ====== FORM ====== -->
+    <div class="card">
+        <h2>Simulation Parameters</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label>
+                Number of assets
+                <input type="number" name="n_stocks" value="10" min="2" max="50">
+            </label>
+
+            <label>
+                Expected return (μ)
+                <input type="number" step="0.01" name="mu" value="0.1">
+            </label>
+
+            <label>
+                Volatility (σ)
+                <input type="number" step="0.01" name="sigma" value="0.2">
+            </label>
+
+            <button type="submit">Run Quant Simulation</button>
+        </form>
+    </div>
+
+    <!-- ====== METRICS ====== -->
+    {% if var %}
+    <div class="card">
+        <h2>Risk Metrics</h2>
+        <div class="metrics">
+            <div class="metric">
+                VaR (95%)
+                <span>{{ var }}</span>
+            </div>
+            <div class="metric">
+                CVaR
+                <span>{{ cvar }}</span>
+            </div>
+            <div class="metric">
+                Hit Rate
+                <span>{{ hit_rate }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ====== FRONTIER ====== -->
+    {% if frontier_img %}
+    <div class="card">
+        <h2>Efficient Frontier</h2>
+        <img src="data:image/png;base64,{{ frontier_img }}" alt="Efficient Frontier">
+    </div>
+    {% endif %}
+
+</div>
+
+<footer>
+    Quant Lab · Django · Research Mode
+</footer>
+
+</body>
+</html>

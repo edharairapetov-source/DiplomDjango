@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quant BI Pro Terminal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root { --bi-bg: #f4f7f9; --ms-blue: #0078d4; --risk-red: #d83b01; }
+        body { background-color: var(--bi-bg); font-family: 'Segoe UI', system-ui, -apple-system; overflow-x: hidden; }
+        
+        /* Layout */
+        .bi-sidebar { background: #fff; border-right: 1px solid #e0e6ed; min-height: 100vh; position: sticky; top: 0; z-index: 100; }
+        .bi-card { border: none; border-radius: 8px; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); background: #fff; margin-bottom: 1.5rem; }
+        
+        /* KPI Scorecards */
+        .kpi-label { font-size: 0.7rem; font-weight: 700; color: #605e5c; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.8rem; font-weight: 700; color: #323130; line-height: 1.2; }
+        .border-bi { border-left: 5px solid var(--ms-blue) !important; }
+        .border-risk { border-left: 5px solid var(--risk-red) !important; }
+        
+        /* Таблица */
+        .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.2em 0.5em; }
+        table.dataTable thead { background-color: #faf9f8; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <aside class="col-md-2 bi-sidebar p-4 shadow-sm">
+            <div class="d-flex align-items-center mb-4">
+                <i class="fa-solid fa-chart-line text-primary fs-3 me-2"></i>
+                <h5 class="m-0 fw-bold">Quant<span class="text-primary">BI</span></h5>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="kpi-label d-block mb-2">Портфель активтов</label>
+                    <input type="text" name="tickers" class="form-control form-control-sm border-primary" 
+                           placeholder="AAPL, TSLA, BTC-USD" value="{{ tickers|default:'AAPL,MSFT,SPY' }}">
+                </div>
+
+                <div class="mb-4">
+                    <label class="kpi-label d-block mb-2">Стресс-тест</label>
+                    <select name="stress_test" class="form-select form-select-sm">
+                        <option value="none">Baseline (Real-time)</option>
+                        <option value="crash">Market Crash (-30%)</option>
+                        <option value="vol_spike">Liquidity Shock</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
+                    <i class="fa-solid fa-sync-alt me-1"></i> UPDATE ANALYTICS
+                </button>
+            </form>
+
+            <div class="mt-5 pt-4 border-top">
+                <label class="kpi-label d-block mb-2 text-muted">Global Stats</label>
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-1"><span>Total Runs:</span> <strong>{{ bi_stats.total|default:0 }}</strong></div>
+                    <div class="d-flex justify-content-between mb-1"><span>Avg Mu:</span> <strong class="text-primary">{{ bi_stats.avg_mu|floatformat:2 }}%</strong></div>
+                    <div class="d-flex justify-content-between"><span>Max VaR:</span> <strong class="text-danger">{{ bi_stats.max_var|default:0 }}</strong></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="col-md-10 p-4">
+            {% if error %}
+            <div class="alert alert-danger d-flex align-items-center shadow-sm" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i> <div>{{ error }}</div>
+            </div>
+            {% endif %}
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="bi-card p-3 border-bi">
+                        <div class="kpi-label">Exp. Annual Return</div>
+                        <div class="kpi-value text-primary">{% if show_results %}{{ current.mu }}%{% else %}0.00%{% endif %}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bi-card p-3 border-risk">
+                        <div class="kpi-label">Value at Risk (VaR)</div>
+                        <div class="kpi-value text-danger">{% if show_results %}{{ current.var_value }}{% else %}0.000{% endif %}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bi-card p-3 border-start border-warning border-5">
+                        <div class="kpi-label">Volatility (Sigma)</div>
+                        <div class="kpi-value">{% if show_results %}{{ current.sigma }}{% else %}0.000{% endif %}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bi-card p-3 bg-dark text-white">
+                        <div class="kpi-label text-light opacity-50">Simulation Status</div>
+                        <div class="h5 mt-1 mb-0 fw-bold">{{ stress_label|default:"Waiting..." }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="bi-card p-4">
+                        <h6 class="fw-bold text-muted mb-4"><i class="fa-solid fa-timeline me-2"></i>TREND: RISK VS RETURN</h6>
+                        <div style="height: 250px;"><canvas id="mainChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bi-card p-4">
+                        <h6 class="fw-bold text-muted mb-4"><i class="fa-solid fa-gauge-high me-2"></i>RISK PROXIMITY</h6>
+                        <div style="height: 250px;"><canvas id="gaugeChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bi-card p-4">
+                <h6 class="fw-bold text-muted mb-4"><i class="fa-solid fa-list-ul me-2"></i>TRANSACTIONAL LOG (HISTORY)</h6>
+                <div class="table-responsive">
+                    <table id="mainTable" class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Assets</th>
+                                <th>Return (%)</th>
+                                <th>VaR Index</th>
+                                <th>Sigma</th>
+                                <th>Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in history %}
+                            <tr>
+                                <td class="text-muted">{{ item.timestamp|date:"d.m.y H:i" }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ item.n_stocks }} Tickers</span></td>
+                                <td class="fw-bold {% if item.mu > 0 %}text-success{% else %}text-danger{% endif %}">{{ item.mu }}%</td>
+                                <td class="text-danger fw-bold">{{ item.var_value }}</td>
+                                <td>{{ item.sigma }}</td>
+                                <td>
+                                    {% if item.var_value > 1.2 %}
+                                    <span class="badge bg-danger-subtle text-danger">Critical</span>
+                                    {% else %}
+                                    <span class="badge bg-success-subtle text-success">Stable</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Таблица
+        $('#mainTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 5,
+            dom: 'lfrtip'
+        });
+
+        const historyData = {{ history_json|safe }};
+
+        // Линейный график
+        new Chart(document.getElementById('mainChart'), {
+            type: 'line',
+            data: {
+                labels: historyData.map(h => h.date),
+                datasets: [
+                    { label: 'Return (%)', data: historyData.map(h => h.mu), borderColor: '#0078d4', backgroundColor: 'rgba(0,120,212,0.1)', fill: true, tension: 0.4 },
+                    { label: 'Risk (VaR)', data: historyData.map(h => h.var), borderColor: '#d83b01', borderDash: [5, 5], tension: 0.4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Спидометр (Gauge)
+        new Chart(document.getElementById('gaugeChart'), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [{% if show_results %}{{ current.sigma|stringformat:"f" }}{% else %}0{% endif %}, 1.5],
+                    backgroundColor: ['#ffc107', '#f3f2f1'],
+                    circumference: 180,
+                    rotation: 270,
+                    cutout: '85%'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    });
+</script>
+
+</body>
+</html>

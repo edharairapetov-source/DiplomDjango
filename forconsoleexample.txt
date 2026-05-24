@@ -1,0 +1,39 @@
+# -------------------------
+# Python Console Starter
+# -------------------------
+
+import numpy as np
+from analysis.simulations import correlated_gbm, jump_diffusion, yahoo_returns
+from analysis.stress import apply_stress
+
+# 1️⃣ Configure tickers and parameters
+tickers = ["AAPL", "MSFT", "GOOGL"]  # change tickers here
+model = "gbm"  # "gbm" or "jump"
+stress_scenario = "none"  # e.g., "market_crash", "bull_market", or "none"
+
+# 2️⃣ Fetch real data from Yahoo
+data = yahoo_returns(tickers)
+mu, sigma, corr = data["mu"], data["sigma"], data["corr"]
+
+# 3️⃣ Apply stress scenario (optional)
+if stress_scenario != "none":
+    mu, sigma = apply_stress(mu, sigma, stress_scenario)
+
+# 4️⃣ Run simulation
+if model == "jump":
+    prices = jump_diffusion(len(tickers), 252, mu, sigma, corr)
+else:
+    prices = correlated_gbm(len(tickers), 252, mu, sigma, corr)
+
+# 5️⃣ Calculate daily returns & portfolio stats
+returns = prices[1:] / prices[:-1] - 1
+port_returns = returns.mean(axis=1)
+
+# 6️⃣ Prepare output
+result = {
+    "tickers": tickers,
+    "model": model,
+    "mean_return": float(np.round(port_returns.mean(), 4)),
+    "volatility": float(np.round(port_returns.std(), 4)),
+    "last_prices": prices[-5:].tolist()  # show last 5 simulated prices
+}
