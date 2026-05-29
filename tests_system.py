@@ -14,7 +14,7 @@ class ExternalApiSystemTest(TestCase):
 
     @patch('yfinance.download')
     def test_yfinance_connection_error(self, mock_download):
-        """Системный тест: Обработка сбоя внешнего API (yfinance)"""
+      
         self.client.login(username='quant_user', password='123')
         
         
@@ -29,7 +29,7 @@ class ExternalApiSystemTest(TestCase):
 
 class UserJourneySystemTest(TestCase):
     def test_new_user_first_analysis(self):
-        """Системный тест: Регистрация -> Логин -> Анализ"""
+       
         client = Client()
         
      
@@ -59,7 +59,7 @@ class StressLogicSystemTest(TestCase):
         self.client = Client()
 
     def test_risk_metrics_increase_under_stress(self):
-        """Системный тест: Сравнение обычного и стрессового расчетов"""
+       
         self.client.login(username='testadmin', password='123')
         
        
@@ -97,16 +97,13 @@ from .models import QuantAnalysis
 
 class FullSystemDatabaseTest(TestCase):
     def setUp(self):
-        """Подготовка: создаем пользователя в тестовой БД"""
+        
         self.user = User.objects.create_user(username='testuser', password='password123')
         self.client = Client()
 
     @patch('yfinance.download')
     def test_complete_flow_to_database(self, mock_download):
-        """
-        СИСТЕМНЫЙ ТЕСТ: 
-        Ввод данных -> Расчет -> Проверка записи в БД
-        """
+        
        
         data = {
             'Close': [150.0, 155.0, 160.0],
@@ -136,7 +133,7 @@ class FullSystemDatabaseTest(TestCase):
         print(f"\n[УСПЕХ] Запись в БД создана. ID: {analysis_entry.id}, Тикер: {payload['tickers']}")
 
     def test_database_is_empty_on_fail(self):
-        """Проверка целостности: если данные неверны, в БД ничего не должно попасть"""
+       
         self.client.login(username='testuser', password='password123')
         
 
