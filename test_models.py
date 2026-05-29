@@ -8,7 +8,7 @@ from analysis.models import QuantAnalysis
 
 class QuantAnalysisModelTestCase(TestCase):
     def setUp(self):
-        # Создаем пользователя, так как модель QuantAnalysis требует ForeignKey(User)
+        
         self.user = User.objects.create_user(username='testuser', password='password123')
         self.analysis = QuantAnalysis.objects.create(
             user=self.user,
@@ -21,17 +21,17 @@ class QuantAnalysisModelTestCase(TestCase):
         )
 
     def test_quant_analysis_creation(self):
-        """Проверка корректности сохранения данных в QuantAnalysis"""
+       
         self.assertEqual(self.analysis.n_stocks, 5)
         self.assertEqual(self.analysis.mu, 0.15)
         self.assertEqual(self.user.username, 'testuser')
 
     def test_ordering(self):
-        """Проверка, что новые записи идут первыми"""
+        
         import time
-        # Создаем первую запись
+       
         QuantAnalysis.objects.create(user=self.user, n_stocks=1, mu=0, sigma=0, var_value=0, cvar_value=0, hit_rate=0)
-        time.sleep(0.01) # Небольшая пауза, чтобы timestamp гарантированно отличался
+        time.sleep(0.01) 
         
         # Создаем вторую запись
         new_analysis = QuantAnalysis.objects.create(user=self.user, n_stocks=5, mu=0, sigma=0, var_value=0, cvar_value=0, hit_rate=0)
