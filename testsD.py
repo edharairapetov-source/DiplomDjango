@@ -5,11 +5,11 @@ from django.urls import reverse, exceptions
 from django.contrib.auth.models import User
 from unittest.mock import patch
 
-# ИМПОРТ: Указываем конкретное имя вашего приложения (замените 'analysis' если оно другое)
+
 try:
     from analysis.models import SimulationRecord, PowerBIMetric
 except ImportError:
-    # Резервный вариант, если модели еще не созданы
+   
     SimulationRecord = None
     PowerBIMetric = None
 
@@ -19,7 +19,7 @@ class StockAnalysisCoreTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(username='testuser', password='password123')
         
-        # Создаем запись только если модель существует
+       
         if SimulationRecord:
             self.simulation = SimulationRecord.objects.create(
                 user=self.user, 
@@ -44,14 +44,14 @@ class StockAnalysisCoreTests(TestCase):
     @patch('yfinance.Ticker')
     def test_api_integration_fixed(self, mock_ticker):
         """UC-4.2 & 4.3: Имитация API, чтобы не было ошибки 500"""
-        # Создаем фейковые данные для yfinance
+       
         mock_data = pd.DataFrame({'Close': [155.10]}, index=[pd.Timestamp.now()])
         mock_ticker.return_value.history.return_value = mock_data
         
         try:
             url = reverse('quant_lab')
             response = self.client.get(url, {'ticker': 'AAPL'})
-            # Если вьюха возвращает 200 или 302 — тест пройден
+            
             self.assertIn(response.status_code, [200, 302])
         except exceptions.NoReverseMatch:
             self.skipTest("URL 'quant_lab' не найден")
@@ -64,11 +64,10 @@ class StockAnalysisCoreTests(TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
         except exceptions.NoReverseMatch:
-            # Вместо ошибки мы просто помечаем тест как пропущенный,
-            # так как URL еще не прописан в проекте
+            
             self.skipTest("Маршрут 'ml_trading' еще не добавлен в urls.py")
 
-# 2. СИСТЕМНЫЕ ТЕСТЫ (UI Selenium)
+
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -95,7 +94,7 @@ class StockAnalysisUITests(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def test_dashboard_ui_access(self):
-        """UC-7.1: Проверка UI без вылета при отсутствии Chrome"""
+       
         if not self.selenium:
             self.skipTest("Chrome Driver не найден, системный тест пропущен во избежание ошибки")
         
