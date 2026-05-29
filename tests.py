@@ -9,7 +9,7 @@ from .models import QuantAnalysis, QuantAnalysisbi, SimulationRecord
 
 class QuantAppTests(TestCase):
     def setUp(self):
-        """Настройка окружения перед каждым тестом."""
+        
         self.client = Client()
         self.user = User.objects.create_user(username='testuser', password='password123')
         self.login_url = reverse('login')  
@@ -25,7 +25,7 @@ class QuantAppTests(TestCase):
         self.assertEqual(response.status_code, 302)  
 
     def test_register_view_get(self):
-        """Проверка отображения страницы регистрации."""
+       
         url = reverse('register')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -35,7 +35,7 @@ class QuantAppTests(TestCase):
 
     @patch('analysis.views.run_analysis_clean')
     def test_dashboard_post_success(self, mock_run_analysis):
-        """Тест POST-запроса на Dashboard с сохранением в БД."""
+        
         self.client.login(username='testuser', password='password123')
         
         
@@ -61,7 +61,7 @@ class QuantAppTests(TestCase):
   
 
     def test_quant_lab7_calculation_logic(self):
-        """Тест математических расчетов в quant_lab7 (симуляция GBM)."""
+        
         self.client.login(username='testuser', password='password123')
         
         post_data = {
@@ -83,7 +83,7 @@ class QuantAppTests(TestCase):
 
     @patch('yfinance.download')
     def test_live_yfinance_api_success(self, mock_yf):
-        """Тест JSON API для получения данных котировок с моком yfinance."""
+       
        
         mock_df = pd.DataFrame({
             'Open': [150.0], 'High': [155.0], 'Low': [149.0], 
@@ -112,7 +112,7 @@ class QuantAppTests(TestCase):
     
 
     def test_unified_quant_bi_pro_stats(self):
-        """Тест агрегации данных для BI-слоя."""
+        
         self.client.login(username='testuser', password='password123')
         
         
@@ -175,7 +175,7 @@ from analysis.models import QuantAnalysis, QuantAnalysisbi, SimulationRecord
 
 class QuantAppTests(TestCase):
     def setUp(self):
-        """Настройка окружения перед каждым тестом."""
+       
         self.client = Client()
         
         self.user = User.objects.create_user(username='testuser', password='password123')
@@ -190,13 +190,13 @@ class QuantAppTests(TestCase):
    
 
     def test_dashboard_requires_login(self):
-        """Проверка, что dashboard защищен (редирект если не залогинен)."""
+       
         response = self.client.get(self.dashboard_url)
        
         self.assertEqual(response.status_code, 302)
 
     def test_register_view_get(self):
-        """Проверка отображения страницы регистрации."""
+       
         response = self.client.get(self.register_url)
         self.assertEqual(response.status_code, 200)
 
@@ -204,7 +204,7 @@ class QuantAppTests(TestCase):
 
     @patch('analysis.views.run_analysis_clean')
     def test_dashboard_post_success(self, mock_run_analysis):
-        """Тест POST-запроса на Dashboard."""
+       
         self.client.login(username='testuser', password='password123')
         
         mock_run_analysis.return_value = {
@@ -220,7 +220,7 @@ class QuantAppTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_quant_lab_calculation_logic(self):
-        """Тест математических расчетов в quant_lab (бывший quant_lab7)."""
+       
         self.client.login(username='testuser', password='password123')
         
         post_data = {
@@ -240,7 +240,7 @@ class QuantAppTests(TestCase):
 
     @patch('yfinance.download')
     def test_live_yfinance_api_success(self, mock_yf):
-        """Тест API котировок с заглушкой yfinance."""
+      
         mock_df = pd.DataFrame({
             'Open': [150.0], 'High': [155.0], 'Low': [149.0], 
             'Close': [152.0], 'Volume': [1000]
@@ -258,7 +258,7 @@ class QuantAppTests(TestCase):
     
 
     def test_unified_quant_bi_pro_stats(self):
-        """Тест агрегации данных для BI."""
+        
         self.client.login(username='testuser', password='password123')
         
         
