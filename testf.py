@@ -40,7 +40,7 @@ class QuantAppFunctionalTests(TestCase):
 
     @patch('yfinance.download')
     def test_quant_lab_post_success(self, mock_yf):
-        """Тест проведения анализа в Quant Lab с имитацией данных Yahoo Finance"""
+        
         self.client.login(username="testuser", password=self.user_password)
         
        
